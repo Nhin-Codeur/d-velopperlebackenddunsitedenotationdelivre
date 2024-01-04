@@ -1,8 +1,9 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose'); // Plugin Mongoose pour se connecter à la data base Mongo Db
+require("dotenv").config();
 
-mongoose.connect("mongodb+srv://clemenceauelliot2:Th5MYaEFWnu2Z8g1@cluster0.fk5awyr.mongodb.net/?retryWrites=true&w=majority", {
+mongoose.connect(process.env.CONNECTURLMONGODB, {
 
 })
     .then(() => console.log('Connexion à MongoDB réussie !'))
@@ -45,5 +46,6 @@ app.use(bodyParser.json());
 app.use('/api/books', bookRoutes);
 app.use('/api/auth', routerUser);
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
 
 module.exports = app;
