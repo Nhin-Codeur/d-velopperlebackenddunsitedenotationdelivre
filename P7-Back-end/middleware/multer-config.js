@@ -12,13 +12,23 @@ const storage = multer.diskStorage({
     destination: (req, file, callback) => {
         callback(null, 'images');
     },
-    filename: async (req, file, callback) => {
-        const name = file.originalname.split(' ').join('_').split('.')[0];
+    // filename: async (req, file, callback) => {
+    //     const name = file.originalname.split(' ').join('_').split('.')[0];
 
-        const fileResized = sharp(file).resize(206, 260).toFile('output.webp');
-        ;
+    //     const fileResized = sharp(file).resize(206, 260).toFile('output.webp');
+    //     ;
+    //     const extension = MIME_TYPES[fileResized.mimetype];
+    //     callback(null, name + Date.now() + '.' + extension);
+    // }
+    filename: (req, file, callback) => {
+        const name = file.originalname.split(' ').join('_').split('.')[0];
+        console.log(file.destination)
+
+        const fileResized = sharp(file).resize(206, 260).toFile(name + '.webp');
+        const nameFileResized = file.originalname.split(' ').join('_');
         const extension = MIME_TYPES[fileResized.mimetype];
-        callback(null);
+        callback(null, nameFileResized + Date.now() + '.' + extension);
+
     }
 });
 
