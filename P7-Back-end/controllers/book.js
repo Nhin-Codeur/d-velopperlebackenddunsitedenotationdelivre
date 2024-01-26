@@ -1,15 +1,50 @@
 const Book = require('../models/book');
 const fs = require('fs');
+const sharp = require('sharp');
+const path = require('path');
 
 exports.createBook = (req, res, next) => {
     const bookObject = JSON.parse(req.body.book);
     delete bookObject._id;
     delete bookObject._userId;
+    const originalImagePath = req.file.path;
+    const outputPath = path.join(
+        "images",
+        path.basename(originalImagePath, path.extname(originalImagePath)) + ".webp"
+    );
+
+
+    if (req.file) {
+
+
+        sharp.cache(false);
+        sharp(originalImagePath)
+            .toFormat("webp")
+            .resize({
+                width: 206,
+                height: 260,
+                fit: "contain"
+            })
+            .toFile('./images/' + req.file.filename.split('.')[0] + '.webp')
+            .then(() => {
+                if (fs.existsSync(originalImagePath)) {
+                    fs.unlinkSync(originalImagePath);
+                }
+                req.file.path = outputPath;
+
+            })
+            .catch((error) => {
+                console.error("Error converting image to webp:", error);
+
+            });
+
+    };
     const book = new Book({
         ...bookObject,
         userId: req.auth.userId,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename.split('.')[0] + '.webp'}`
     });
+
 
     book.save()
         .then(() => { res.status(201).json({ message: 'Livre enregistré !' }) })
@@ -33,24 +68,63 @@ exports.getOneBook = (req, res, next) => {
 };
 
 exports.modifyBook = (req, res, next) => {
-    const bookObject = req.file ? {
+    const bookObject = JSON.parse(req.body.book);
+    delete bookObject._id;
+    delete bookObject._userId;
+    const originalImagePath = req.file.path;
+    const outputPath = path.join(
+        "images",
+        path.basename(originalImagePath, path.extname(originalImagePath)) + ".webp"
+    );
+
+
+    if (req.file) {
+
+
+        sharp.cache(false);
+        sharp(originalImagePath)
+            .toFormat("webp")
+            .resize({
+                width: 206,
+                height: 260,
+                fit: "contain"
+            })
+            .toFile('./images/' + req.file.filename.split('.')[0] + '.webp')
+            .then(() => {
+                if (fs.existsSync(originalImagePath)) {
+                    fs.unlinkSync(originalImagePath);
+                }
+                req.file.path = outputPath;
+
+            })
+            .catch((error) => {
+                console.error("Error converting image to webp:", error);
+
+            });
+
+    };
+    const book = new Book({
+        ...bookObject,
+        userId: req.auth.userId,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename.split('.')[0] + '.webp'}`
+    });
+
+    bookObject = req.file ? {
         ...JSON.parse(req.body.book),
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     } : { ...req.body };
-    // const bookObject = {
-    //     ...req.body,
 
-    // }
 
     delete bookObject._userId;
     console.log(req.body)
     console.log(bookObject);
+
     Book.findOne({ _id: req.params.id })
         .then((book) => {
             if (book.userId != req.auth.userId) {
                 res.status(401).json({ message: 'Non autorisé' });
             } else {
-                Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
+                Book.updateOne({ _id: req.params.id }, { bookObject, _id: req.params.id })
                     .then(() => res.status(200).json({ message: 'Livre modifié!' }))
                     .catch(error => res.status(401).json({ error }));
             }
